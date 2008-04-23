@@ -1,16 +1,8 @@
-XML/Parser/Lite/Tree version 0.01
-=================================
+XML::Parser::Lite::Tree version 0.02
+====================================
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
+Lightweight XML tree builder
 
-A README file is required for CPAN modules since CPAN extracts the
-README file from a module distribution so that people browsing the
-archive can use it get an idea of the modules uses. It is usually a
-good idea to provide version information here so that people can
-decide whether fixes for the module are worth downloading.
 
 INSTALLATION
 
@@ -21,15 +13,16 @@ To install this module type the following:
    make test
    make install
 
+
 DEPENDENCIES
 
 This module requires these other modules and libraries:
 
-  blah blah blah
+  XML::Parser::Lite
+  Test::Simple
+
 
 COPYRIGHT AND LICENCE
 
-Put the correct copyright and licence information here.
-
-Copyright (C) 2004 A. U. Thor blah blah blah
-
+Copyright (C) 2004 Cal Henderson <cal@iamcal.com>
+License: Perl Artistic License
