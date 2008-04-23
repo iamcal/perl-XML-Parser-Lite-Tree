@@ -1,0 +1,6 @@
+Revision history for Perl extension XML::Parser::Lite::Tree.
+
+0.01  Tue May 18 17:44:05 2004
+	- original version; created by h2xs 1.21 with options
+		-A -X -n XML::Parser::Lite::Tree
+
