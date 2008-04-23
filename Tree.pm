@@ -5,7 +5,7 @@ use strict;
 use warnings;
 use XML::Parser::Lite;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use vars qw( $parser );
 
@@ -103,10 +103,16 @@ XML::Parser::Lite::Tree - Lightweight XML tree builder
 
 =head1 DESCRIPTION
 
-This is a singleton class for parsing XML into a tree structure. For example, the
-following XML:
+This is a singleton class for parsing XML into a tree structure. How does this
+differ from other XML tree generators? By using XML::Parser::Lite, which is a
+pure perl XML parser. Using this module you can tree-ify simple XML without
+having to compile any C.
+
+
+For example, the following XML:
 
   <foo woo="yay"><bar a="b" c="d" />hoopla</foo>
+
 
 Parses into the following tree:
 
