@@ -28,15 +28,13 @@ sub new {
 			Char	=> sub { $self->_do_char(@_); },
 			End	=> sub { $self->_end_tag(@_); },
 			Comment	=> sub { $self->_do_comment(@_); },
+			XMLDecl	=> sub { $self->_do_xmldecl(@_); },
+			Doctype	=> sub { $self->_do_doctype(@_); },
 		};
 	$self->{process_ns} = $self->{opts}->{process_ns} || 0;
 	$self->{skip_white} = $self->{opts}->{skip_white} || 0;
 
 	return $self;
-}
-
-sub _do_comment {
-	print Dumper \@_;
 }
 
 sub parse {
@@ -102,6 +100,18 @@ sub _end_tag {
 	my $self = shift;
 
 	pop @{$self->{tag_stack}};
+}
+
+sub _do_comment {
+	print Dumper \@_;
+}
+
+sub _do_xmldecl {
+	print Dumper \@_;
+}
+
+sub _do_doctype {
+	print Dumper \@_;
 }
 
 sub mark_namespaces {
