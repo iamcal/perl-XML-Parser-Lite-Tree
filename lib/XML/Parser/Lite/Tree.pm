@@ -158,14 +158,14 @@ sub mark_namespaces {
 		# finally, add xpath-style namespace nodes
 		#
 
-		$obj->{namespaces} = [];
+		$obj->{namespaces} = {};
 
 		for my $key (keys %{$self->{ns_stack}}){
 
 			if (scalar @{$self->{ns_stack}->{$key}}){
 
 				my $uri = $self->{ns_stack}->{$key}->[-1];
-				push @{$obj->{namespaces}}, [$key, $uri];
+				$obj->{namespaces}->{$key} = $uri;
 			}
 		}
 	}
