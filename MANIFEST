@@ -1,6 +1,7 @@
 Makefile.PL
 MANIFEST
 README
-t/01.t
+t/01_basic.t
+t/02_options.t
 lib/XML/Parser/Lite.pm
 lib/XML/Parser/Lite/Tree.pm
