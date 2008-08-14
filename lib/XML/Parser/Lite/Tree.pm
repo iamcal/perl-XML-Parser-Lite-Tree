@@ -4,13 +4,11 @@ use 5.006;
 use strict;
 use warnings;
 use XML::Parser::Lite;
+use Data::Dumper;
 
 our $VERSION = '0.05';
 
 use vars qw( $parser );
-
-my $next_tag;
-my @tag_stack;
 
 sub instance {
 	return $parser if $parser;
@@ -18,70 +16,212 @@ sub instance {
 }
 
 sub new {
-	my $parser = bless { __parser => undef }, $_[0];
-	$parser->init;
-	$parser;
+	my $class = shift;
+	my $self = bless {}, $class;
+
+	my %opts = (ref $_[0]) ? ((ref $_[0] eq 'HASH') ? %{$_[0]} : () ) : @_;
+	$self->{opts} = \%opts;
+
+	$self->{__parser} = new XML::Parser::Lite
+		Handlers => {
+			Start	=> sub { $self->_start_tag(@_); },
+			Char	=> sub { $self->_do_char(@_); },
+			End	=> sub { $self->_end_tag(@_); },
+			Comment	=> sub { $self->_do_comment(@_); },
+		};
+	$self->{process_ns} = $self->{opts}->{process_ns} || 0;
+	$self->{skip_white} = $self->{opts}->{skip_white} || 0;
+
+	return $self;
 }
 
-sub init {
-	my $parser = shift;
-	$parser->{__parser} = new XML::Parser::Lite
-		Handlers => {
-			Start => \&_start_tag,
-			Char => \&_do_char,
-			End => \&_end_tag,
-		};
+sub _do_comment {
+	print Dumper \@_;
 }
 
 sub parse {
-	my ($parser, $content) = @_;
+	my ($self, $content) = @_;
 
-	$next_tag = {
+	my $root = {
 		'type' => 'root',
 		'children' => [],
 	};
-	@tag_stack = ($next_tag);
 
-	$parser->{__parser}->parse($content);
+	$self->{tag_stack} = [$root];
 
-	return $next_tag;
+	$self->{__parser}->parse($content);
+
+	if ($self->{skip_white}){
+		$self->strip_white($root);
+	}
+
+	if ($self->{process_ns}){
+		$self->{ns_stack} = {};
+		$self->mark_namespaces($root);
+	}
+
+	return $root;
 }
 
 sub _start_tag {
+	my $self = shift;
 	shift;
 
 	my $new_tag = {
-		'type' => 'tag',
+		'type' => 'element',
 		'name' => shift,
 		'attributes' => {},
 		'children' => [],
 	};
-	while(my $a_name = shift @_){
+
+	while (my $a_name = shift @_){
 		my $a_value = shift @_;
 		$new_tag->{attributes}->{$a_name} = $a_value;
 	}
 
-	push @{$next_tag->{children}}, $new_tag;
-
-	push @tag_stack, $new_tag;
-	$next_tag = $new_tag;
+	push @{$self->{tag_stack}->[-1]->{children}}, $new_tag;
+	push @{$self->{tag_stack}}, $new_tag;
 }
 
 sub _do_char {
+	my $self = shift;
 	shift;
+
 	for my $content(@_){
+
 		my $new_tag = {
-			'type' => 'data',
+			'type' => 'text',
 			'content' => $content,
 		};
-		push @{$next_tag->{children}}, $new_tag;
+
+		push @{$self->{tag_stack}->[-1]->{children}}, $new_tag;
 	}
 }
 
 sub _end_tag {
-	pop @tag_stack;
-	$next_tag = $tag_stack[$#tag_stack];
+	my $self = shift;
+
+	pop @{$self->{tag_stack}};
 }
+
+sub mark_namespaces {
+	my ($self, $obj) = @_;
+
+	my @ns_keys;
+
+	#
+	# mark
+	#
+
+	if ($obj->{type} eq 'element'){
+
+		#
+		# first, add any new NS's to the stack
+		#
+
+		my @keys = keys %{$obj->{attributes}};
+
+		for my $k(@keys){
+
+			if ($k =~ /^xmlns:(.*)$/){
+
+				push @{$self->{ns_stack}->{$1}}, $obj->{attributes}->{$k};
+				push @ns_keys, $1;
+				delete $obj->{attributes}->{$k};
+			}
+
+			if ($k eq 'xmlns'){
+
+				push @{$self->{ns_stack}->{__default__}}, $obj->{attributes}->{$k};
+				push @ns_keys, '__default__';
+				delete $obj->{attributes}->{$k};
+			}
+		}
+
+
+		#
+		# now - does this tag have a NS?
+		#
+
+		if ($obj->{name} =~ /^(.*?):(.*)$/){
+
+			$obj->{local_name} = $2;
+			$obj->{ns_key} = $1;
+			$obj->{ns} = $self->{ns_stack}->{$1}->[-1];
+		}else{
+			$obj->{local_name} = $obj->{name};
+			$obj->{ns} = $self->{ns_stack}->{__default__}->[-1];
+		}
+
+
+		#
+		# finally, add xpath-style namespace nodes
+		#
+
+		$obj->{namespaces} = [];
+
+		for my $key (keys %{$self->{ns_stack}}){
+
+			if (scalar @{$self->{ns_stack}->{$key}}){
+
+				my $uri = $self->{ns_stack}->{$key}->[-1];
+				push @{$obj->{namespaces}}, [$key, $uri];
+			}
+		}
+	}
+
+
+	#
+	# descend
+	#
+
+	if ($obj->{type} eq 'root' || $obj->{type} eq 'element'){
+
+		for my $child (@{$obj->{children}}){
+
+			$self->mark_namespaces($child);
+		}
+	}
+
+
+	#
+	# pop from stack
+	#
+
+	for my $k (@ns_keys){
+		pop @{$self->{ns_stack}->{$k}};
+	}
+}
+
+sub strip_white {
+	my ($self, $obj) = @_;
+
+	if ($obj->{type} eq 'root' || $obj->{type} eq 'element'){
+
+		my $new_kids = [];
+
+		for my $child (@{$obj->{children}}){
+
+			if ($child->{type} eq 'text'){
+
+				if ($child->{content} =~ m/\S/){
+
+					push @{$new_kids}, $child;
+				}
+
+			}elsif ($child->{type} eq 'element'){
+
+				$self->strip_white($child);
+				push @{$new_kids}, $child;
+			}else{
+				push @{$new_kids}, $child;
+			}
+		}
+
+		$obj->{children} = $new_kids;
+	}
+}
+
 
 1;
 __END__
@@ -125,18 +265,18 @@ Parses into the following tree:
                                                                 'a' => 'b',
                                                                 'c' => 'd'
                                                               },
-                                              'type' => 'tag',
+                                              'type' => 'element',
                                               'name' => 'bar'
                                             },
                                             {
                                               'content' => 'hoopla',
-                                              'type' => 'data'
+                                              'type' => 'text'
                                             }
                                           ],
                             'attributes' => {
                                               'woo' => 'yay'
                                             },
-                            'type' => 'tag',
+                            'type' => 'element',
                             'name' => 'foo'
                           }
                         ],
@@ -144,10 +284,10 @@ Parses into the following tree:
         };
 
 
-Each node contains a C<type> key, one of C<root>, C<tag> and C<data>. C<root> is the 
-document root, and only contains an array ref C<children>. C<tag> represents a normal
+Each node contains a C<type> key, one of C<root>, C<element> and C<text>. C<root> is the 
+document root, and only contains an array ref C<children>. C<element> represents a normal
 tag, and contains an array ref C<children>, a hash ref C<attributes> and a string C<name>.
-C<data> nodes contain only a C<content> string.
+C<text> nodes contain only a C<content> string.
 
 
 =head1 METHODS
@@ -158,6 +298,10 @@ C<data> nodes contain only a C<content> string.
 
 Returns an instance of the tree parser.
 
+=item C<new( options... )>
+
+Creates a new parser. Valid options include C<process_ns> to process namespaces.
+
 =item C<parse($xml)>
 
 Parses the xml in C<$xml> and returns the tree as a hash ref.
@@ -167,7 +311,7 @@ Parses the xml in C<$xml> and returns the tree as a hash ref.
 
 =head1 AUTHOR
 
-Copyright (C) 2004, Cal Henderson, E<lt>cal@iamcal.comE<gt>
+Copyright (C) 2004-2008, Cal Henderson, E<lt>cal@iamcal.comE<gt>
 
 
 =head1 SEE ALSO
