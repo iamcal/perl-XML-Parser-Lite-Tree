@@ -4,9 +4,8 @@ use 5.006;
 use strict;
 use warnings;
 use XML::Parser::Lite;
-use Data::Dumper;
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 use vars qw( $parser );
 
@@ -48,6 +47,8 @@ sub parse {
 	$self->{tag_stack} = [$root];
 
 	$self->{__parser}->parse($content);
+
+	$self->cleanup($root);
 
 	if ($self->{skip_white}){
 		$self->strip_white($root);
@@ -103,15 +104,38 @@ sub _end_tag {
 }
 
 sub _do_comment {
-	print Dumper \@_;
+	my $self = shift;
+	shift;
+
+	for my $content(@_){
+
+		my $new_tag = {
+			'type' => 'comment',
+			'content' => $content,
+		};
+
+		push @{$self->{tag_stack}->[-1]->{children}}, $new_tag;
+	}
 }
 
 sub _do_xmldecl {
-	print Dumper \@_;
+	my $self = shift;
+	shift;
+
+	push @{$self->{tag_stack}->[-1]->{children}}, {
+		'type' => 'pi',
+		'content' => shift,
+	};
 }
 
 sub _do_doctype {
-	print Dumper \@_;
+	my $self = shift;
+	shift;
+
+	push @{$self->{tag_stack}->[-1]->{children}}, {
+		'type' => 'dtd',
+		'content' => shift,
+	};
 }
 
 sub mark_namespaces {
@@ -229,6 +253,52 @@ sub strip_white {
 		}
 
 		$obj->{children} = $new_kids;
+	}
+}
+
+sub cleanup {
+	my ($self, $obj) = @_;
+
+	#
+	# cleanup PIs
+	#
+
+	if ($obj->{type} eq 'pi'){
+
+		if ($obj->{content} =~ m/^(\S+)\s+(.*)\?$/s){
+
+			delete $obj->{content};
+			$obj->{target} = $1;
+			$obj->{content} = $2;
+		}
+	}
+
+
+	#
+	# cleanup DTDs
+	#
+
+	if ($obj->{type} eq 'dtd'){
+
+		if ($obj->{content} =~ m/^(\S+)\s+(.*)$/s){
+
+			delete $obj->{content};
+			$obj->{name} = $1;
+			$obj->{content} = $2;
+		}
+	}
+
+
+	#
+	# recurse
+	#
+	
+	if ($obj->{type} eq 'root' || $obj->{type} eq 'element'){
+
+		for my $child (@{$obj->{children}}){
+
+			$self->cleanup($child);
+		}
 	}
 }
 
