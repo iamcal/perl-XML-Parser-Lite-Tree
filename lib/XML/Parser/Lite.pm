@@ -18,7 +18,7 @@ package XML::Parser::Lite;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = 0.710.05;
+$VERSION = '0.710.05';
 
 sub new {
     my $class = shift;
