@@ -18,7 +18,7 @@ DEPENDENCIES
 
 This module requires these other modules and libraries:
 
-  Test::Simple
+  Test::More
 
 
 COPYRIGHT AND LICENCE
