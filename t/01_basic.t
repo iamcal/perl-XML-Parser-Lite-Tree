@@ -1,4 +1,4 @@
-use Test::Simple tests => 15;
+use Test::More tests => 15;
 
 use XML::Parser::Lite::Tree;
 my $x = XML::Parser::Lite::Tree->instance();
