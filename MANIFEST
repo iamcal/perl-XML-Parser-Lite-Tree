@@ -6,5 +6,5 @@ t/02_options.t
 t/03_comments.t
 t/04_processing_instructions.t
 t/05_doctypes.t
-lib/XML/Parser/Lite.pm
+lib/XML/Parser/LiteCopy.pm
 lib/XML/Parser/Lite/Tree.pm

@@ -1,7 +1,8 @@
 # NOTE: This module comes from SOAP::Lite, which you probably don't
 # have, so it's repackaged here to avoid the huge dependancy tree.
 # also, the current version in CPAN doesn't run under older perls
-# so i've remove the 'use version' magic.
+# so i've removed the 'use version' magic. And it's been renamed
+# so that search.cpan.org doesn't whine at me
 
 # ======================================================================
 #
@@ -14,7 +15,7 @@
 #
 # ======================================================================
 
-package XML::Parser::Lite;
+package XML::Parser::LiteCopy;
 
 use strict;
 use vars qw($VERSION);

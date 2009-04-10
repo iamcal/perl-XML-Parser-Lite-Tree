@@ -3,9 +3,9 @@ package XML::Parser::Lite::Tree;
 use 5.006;
 use strict;
 use warnings;
-use XML::Parser::Lite;
+use XML::Parser::LiteCopy;
 
-our $VERSION = '0.07';
+our $VERSION = '0.09';
 
 use vars qw( $parser );
 
@@ -21,7 +21,7 @@ sub new {
 	my %opts = (ref $_[0]) ? ((ref $_[0] eq 'HASH') ? %{$_[0]} : () ) : @_;
 	$self->{opts} = \%opts;
 
-	$self->{__parser} = new XML::Parser::Lite
+	$self->{__parser} = new XML::Parser::LiteCopy
 		Handlers => {
 			Start	=> sub { $self->_start_tag(@_); },
 			Char	=> sub { $self->_do_char(@_); },
