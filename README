@@ -23,9 +23,11 @@ This module requires these other modules and libraries:
 
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2004-2008 Cal Henderson <cal@iamcal.com>
-License: Perl Artistic License
+Copyright (C) 2004-2009 Cal Henderson <cal@iamcal.com>
+License: Perl Artistic License 2.0
 
 Contains XML::Parser::Lite:
-Copyright (C) 2000-2007 Paul Kulchenko. All rights reserved.
-Copyright (C) 2008- Martin Kutter. All rights reserved.
+Copyright (C) 2000-2007 Paul Kulchenko <paulclinger@yahoo.com>
+Copyright (C) 2008 Martin Kutter <martin.kutter@fen-net.de>
+SOAP::Lite is free software; you can redistribute it
+and/or modify it under the same terms as Perl itself.
