@@ -5,7 +5,7 @@ use strict;
 use warnings;
 use XML::Parser::LiteCopy;
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 use vars qw( $parser );
 
@@ -80,6 +80,7 @@ sub _start_tag {
 
 	push @{$self->{tag_stack}->[-1]->{children}}, $new_tag;
 	push @{$self->{tag_stack}}, $new_tag;
+	1;
 }
 
 sub _do_char {
@@ -95,12 +96,14 @@ sub _do_char {
 
 		push @{$self->{tag_stack}->[-1]->{children}}, $new_tag;
 	}
+	1;
 }
 
 sub _end_tag {
 	my $self = shift;
 
 	pop @{$self->{tag_stack}};
+	1;
 }
 
 sub _do_comment {
@@ -116,6 +119,7 @@ sub _do_comment {
 
 		push @{$self->{tag_stack}->[-1]->{children}}, $new_tag;
 	}
+	1;
 }
 
 sub _do_xmldecl {
@@ -126,6 +130,7 @@ sub _do_xmldecl {
 		'type' => 'pi',
 		'content' => shift,
 	};
+	1;
 }
 
 sub _do_doctype {
@@ -136,6 +141,7 @@ sub _do_doctype {
 		'type' => 'dtd',
 		'content' => shift,
 	};
+	1;
 }
 
 sub mark_namespaces {
