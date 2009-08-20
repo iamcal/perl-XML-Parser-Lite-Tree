@@ -108,7 +108,7 @@ sub _regexp {
     my $ElemTagCE = "($Name)"
         . "(?:$S($Name)(?:$S)?=(?:$S)?(?:$AttValSE)"
         . "(?{[\@{\$^R||[]},\$8=>defined\$9?\$9:\$10]}))*(?:$S)?(/)?>"
-        . "(?{${package}::_start(\$7,\@{\$^R||[]})})(?{\$11 and ${package}::_end(\$7)})";
+        . "(?{${package}::_start(\$7,\@{\$^R||[]}),\$^R=[]})(?{\$11 and ${package}::_end(\$7)})";
 
     my $MarkupSPE = "<(?:!(?:$DeclCE)?|\\?(?:$PI_CE)?|/(?:$EndTagCE)?|(?:$ElemTagCE)?)";
 
