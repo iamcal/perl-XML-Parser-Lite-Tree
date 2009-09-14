@@ -75,39 +75,45 @@ sub _regexp {
     use re 'eval';
     my $TextSE = "[^<]+";
 
+    # backrefs:
+    # 1 : TextSE
+    # 2 : MarkupSPE / DeclCE / CommentCE
+    # - : MarkupSPE / DeclCE / CDATA_CE
+    # 3 : MarkupSPE / DeclCE / DocTypeCE
+    # 4 : ?
+    # 5 : MarkupSPE / PI_CE
+    # 6 : MarkupSPE / EndTagCE
+    # 7+: MarkupSPE / ElemTagCE
+
     my $Until2Hyphens = "((?:[^-]*)-(?:[^-]+-)*-)";
     my $CommentCE = "$Until2Hyphens(?{${package}::comment(\$2)})>?";
 
-#    my $UntilHyphen = "[^-]*-";
-#    my $Until2Hyphens = "$UntilHyphen(?:[^-]$UntilHyphen)*-";
-#    my $CommentCE = "$Until2Hyphens>?";
-
     my $UntilRSBs = "[^\\]]*](?:[^\\]]+])*]+";
     my $CDATA_CE = "$UntilRSBs(?:[^\\]>]$UntilRSBs)*>";
+
     my $S = "[ \\n\\t\\r]+";
     my $NameStrt = "[A-Za-z_:]|[^\\x00-\\x7F]";
     my $NameChar = "[A-Za-z0-9_:.-]|[^\\x00-\\x7F]";
     my $Name = "(?:$NameStrt)(?:$NameChar)*";
     my $QuoteSE = "\"[^\"]*\"|'[^']*'";
     my $DT_IdentSE = "$Name(?:$S(?:$Name|$QuoteSE))*";
-#    my $DT_IdentSE = "$S$Name(?:$S(?:$Name|$QuoteSE))*";
     my $MarkupDeclCE = "(?:[^\\]\"'><]+|$QuoteSE)*>";
     my $S1 = "[\\n\\r\\t ]";
     my $UntilQMs = "[^?]*\\?";
+
     my $PI_Tail = "\\?>|$S1$UntilQMs(?:[^>?]$UntilQMs)*";
     my $DT_ItemSE = "<(?:!(?:--$Until2Hyphens>|[^-]$MarkupDeclCE)|\\?$Name(?:$PI_Tail>))|%$Name;|$S";
     my $DocTypeCE = "$S($DT_IdentSE(?:$S)?(?:\\[(?:$DT_ItemSE)*](?:$S)?)?)>(?{${package}::_doctype(\$3)})";
-#    my $PI_Tail = "\\?>|$S1$UntilQMs(?:[^>?]$UntilQMs)*>";
-#    my $DT_ItemSE = "<(?:!(?:--$Until2Hyphens>|[^-]$MarkupDeclCE)|\\?$Name(?:$PI_Tail))|%$Name;|$S";
-#    my $DocTypeCE = "$DT_IdentSE(?:$S)?(?:\\[(?:$DT_ItemSE)*](?:$S)?)?>?";
+
     my $DeclCE = "--(?:$CommentCE)?|\\[CDATA\\[(?:$CDATA_CE)?|DOCTYPE(?:$DocTypeCE)?";
-#    my $PI_CE = "$Name(?:$PI_Tail)?";
+
     my $PI_CE = "($Name(?:$PI_Tail))>(?{${package}::_xmldecl(\$5)})";
+
     # these expressions were modified for backtracking and events
-#    my $EndTagCE = "($Name)(?{${package}::_end(\$2)})(?:$S)?>";
+
     my $EndTagCE = "($Name)(?{${package}::_end(\$6)})(?:$S)?>";
     my $AttValSE = "\"([^<\"]*)\"|'([^<']*)'";
-#    my $ElemTagCE = "($Name)(?:$S($Name)(?:$S)?=(?:$S)?(?:$AttValSE)(?{[\@{\$^R||[]},\$4=>defined\$5?\$5:\$6]}))*(?:$S)?(/)?>(?{${package}::_start( \$3,\@{\$^R||[]})})(?{\${7} and ${package}::_end(\$3)})";
+
     my $ElemTagCE = "($Name)"
         . "(?:$S($Name)(?:$S)?=(?:$S)?(?:$AttValSE)"
         . "(?{[\@{\$^R||[]},\$8=>defined\$9?\$9:\$10]}))*(?:$S)?(/)?>"
@@ -209,7 +215,7 @@ sub _doctype {
 }
 
 sub _xmldecl {
-    XMLDecl(__PACKAGE__, $_[0]);
+    XMLDecl(__PACKAGE__, substr $_[0], 0, -1);
 }
 
 
