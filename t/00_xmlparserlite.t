@@ -77,6 +77,7 @@ sub test_chars {
 &test_chars('<foo>hey&lt;</foo>', ('hey&lt;'));
 &test_chars('<foo>&amp;hey</foo>', ('&amp;hey'));
 
+&test_chars('<foo><![CDATA[ yo ]]></foo>', (' yo '));
 
 
 #
@@ -112,6 +113,30 @@ sub test_comments {
 &test_comments('<foo><!-- - --></foo>', (' - '));
 &test_comments('<foo><!--fg--></foo><!--h-->', ('fg','h'));
 &test_comments('<foo><!--i-j--></foo>', ('i-j'));
+
+
+#
+# processing instructions (PI)
+#
+
+sub test_pi {
+  my @instructions;
+  my $p = new XML::Parser::LiteCopy
+    Handlers => {
+      XMLDecl => sub { push @instructions, $_[1]; },
+    }
+  ;
+  my $in = shift;
+  $p->parse($in);
+  is(scalar @instructions, scalar @_);
+  is_deeply(\@instructions, \@_);
+}
+
+&test_pi('<foo />', ());
+&test_pi('<?name pidata?><foo />', ('name pidata'));
+&test_pi('<?xml version="1.0"? encoding="UTF-8"?><foo/>', ('xml version="1.0"? encoding="UTF-8"'));
+&test_pi(qq|<bar><?php\nexit;\n?></bar>|, (qq|php\nexit;\n|));
+&test_pi('<?yay woo??><foo />', ('yay woo?')); # technically allowed...
 
 
 #
