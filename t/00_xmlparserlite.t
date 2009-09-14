@@ -1,4 +1,4 @@
-use Test::More tests => 33;
+use Test::More tests => 43;
 
 use XML::Parser::LiteCopy;
 use Data::Dumper;
@@ -46,6 +46,37 @@ ok(defined $foo{root});
 is($foo{root}, '0');
 ok(defined $foo{empty});
 is($foo{empty}, '');
+
+
+#
+# PCDATA
+#
+
+sub test_chars {
+  my @chars;
+  my $p = new XML::Parser::LiteCopy
+    Handlers => {
+      Char => sub { push @chars, $_[1]; },
+    }
+  ;
+  my $in = shift;
+  $p->parse($in);
+  is(scalar @chars, scalar @_);
+  is_deeply(\@chars, \@_);
+}
+
+
+# >>> An important note about entities:
+# PCDATA segments will fire Char events as-is.
+# CDATA segments will convert &<>" into their entities, leaving everything else as-is.
+# this means that the Char events will always have encoded data!
+
+&test_chars('<foo />', ());
+&test_chars('<foo></foo>', ());
+&test_chars('<foo>hey</foo>', ('hey'));
+&test_chars('<foo>hey&lt;</foo>', ('hey&lt;'));
+&test_chars('<foo>&amp;hey</foo>', ('&amp;hey'));
+
 
 
 #
