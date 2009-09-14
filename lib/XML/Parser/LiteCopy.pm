@@ -74,11 +74,14 @@ sub _regexp {
     #
     use re 'eval';
     my $TextSE = "[^<]+";
-    my $UntilHyphen = "[^-]*-";
-    my $Until2Hyphens = "([^-]*)-(?:[^-]$[^-]*-)*-";
+
+    my $Until2Hyphens = "((?:[^-]*)-(?:[^-]+-)*-)";
     my $CommentCE = "$Until2Hyphens(?{${package}::comment(\$2)})>?";
+
+#    my $UntilHyphen = "[^-]*-";
 #    my $Until2Hyphens = "$UntilHyphen(?:[^-]$UntilHyphen)*-";
 #    my $CommentCE = "$Until2Hyphens>?";
+
     my $UntilRSBs = "[^\\]]*](?:[^\\]]+])*]+";
     my $CDATA_CE = "$UntilRSBs(?:[^\\]>]$UntilRSBs)*>";
     my $S = "[ \\n\\t\\r]+";
@@ -193,7 +196,7 @@ sub _end {
 }
 
 sub comment {
-    Comment(__PACKAGE__, $_[0]);
+    Comment(__PACKAGE__, substr $_[0], 0, -2);
 }
 
 sub end {

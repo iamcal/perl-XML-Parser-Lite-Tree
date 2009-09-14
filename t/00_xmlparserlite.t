@@ -96,12 +96,20 @@ sub test_comments {
   is_deeply(\@comments, \@_);
 }
 
+# >>> A note about comments:
+# An XML comment opens with a "<!--" delimiter and generally closes with the first subsequent
+# occurrence of the closing "-->" delimiter. An explicitly stated exception is that a double
+# hyphen is not permitted within the body of a comment. This rule ensures that unterminated
+# comments are detected if a new comment opening delimiter is encountered. There is an
+# additional restriction that comments cannot be terminated with the "--->" sequence, that is,
+# that the body of the comment cannot terminate with a hyphen
+
 &test_comments('<foo></foo>', ());
 &test_comments('<foo><!--a--></foo>', ('a'));
 &test_comments('<foo><!-- b --></foo>', (' b '));
-&test_comments('<foo><!-- c--d --></foo>', (' c--d '));
-&test_comments('<foo><!-- e-- --></foo>', (' e-- '));
-&test_comments('<foo><!-- -- --></foo>', (' -- '));
+&test_comments('<foo><!-- c-d --></foo>', (' c-d '));
+&test_comments('<foo><!-- e- --></foo>', (' e- '));
+&test_comments('<foo><!-- - --></foo>', (' - '));
 &test_comments('<foo><!--fg--></foo><!--h-->', ('fg','h'));
 &test_comments('<foo><!--i-j--></foo>', ('i-j'));
 
