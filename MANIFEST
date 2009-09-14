@@ -1,6 +1,7 @@
 Makefile.PL
 MANIFEST
 README
+t/00_xmlparserlite.t
 t/01_basic.t
 t/02_options.t
 t/03_comments.t
