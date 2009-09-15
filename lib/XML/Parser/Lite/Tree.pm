@@ -5,7 +5,7 @@ use strict;
 use warnings;
 use XML::Parser::LiteCopy;
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 use vars qw( $parser );
 
@@ -288,7 +288,7 @@ sub cleanup {
 
 	if ($obj->{type} eq 'pi'){
 
-		my ($x, $y) = split / /, $obj->{content}, 2;
+		my ($x, $y) = split /\s+/, $obj->{content}, 2;
 		$obj->{target} = $x;
 		$obj->{content} = $y;
 	}
@@ -300,12 +300,9 @@ sub cleanup {
 
 	if ($obj->{type} eq 'dtd'){
 
-		if ($obj->{content} =~ m/^(\S+)\s+(.*)$/s){
-
-			delete $obj->{content};
-			$obj->{name} = $1;
-			$obj->{content} = $2;
-		}
+		my ($x, $y) = split /\s+/, $obj->{content}, 2;
+		$obj->{name} = $x;
+		$obj->{content} = $y;
 	}
 
 

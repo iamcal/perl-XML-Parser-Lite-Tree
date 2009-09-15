@@ -1,4 +1,4 @@
-use Test::More tests => 65;
+use Test::More tests => 67;
 
 use XML::Parser::LiteCopy;
 use Data::Dumper;
