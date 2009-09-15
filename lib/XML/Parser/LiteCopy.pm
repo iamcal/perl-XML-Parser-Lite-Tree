@@ -41,7 +41,7 @@ sub setHandlers {
     no strict 'refs'; local $^W;
     # clear all handlers if called without parameters
     if (not @_) {
-        for (qw(Start End Char Final Init Comment Doctype PI)) {
+        for (qw(Start End Char Final Init CData Comment Doctype PI)) {
             *$_ = sub {}
         }
     }
@@ -71,25 +71,24 @@ sub _regexp {
 
     # Modifications may be tracked on SOAP::Lite's SVN at
     # https://soaplite.svn.sourceforge.net/svnroot/soaplite/
-    #
+
     use re 'eval';
     my $TextSE = "[^<]+";
 
     # backrefs:
     # 1 : TextSE
     # 2 : MarkupSPE / DeclCE / CommentCE
-    # - : MarkupSPE / DeclCE / CDATA_CE
-    # 3 : MarkupSPE / DeclCE / DocTypeCE
-    # 4 : ?
+    # 3 : MarkupSPE / DeclCE / CDATA_CE
+    # 4 : MarkupSPE / DeclCE / DocTypeCE
     # 5 : MarkupSPE / PI_CE
     # 6 : MarkupSPE / EndTagCE
     # 7+: MarkupSPE / ElemTagCE
 
-    my $Until2Hyphens = "((?:[^-]*)-(?:[^-]+-)*-)";
-    my $CommentCE = "$Until2Hyphens(?{${package}::comment(\$2)})>?";
+    my $Until2Hyphens = "(?:[^-]*)-(?:[^-]+-)*-";
+    my $CommentCE = "($Until2Hyphens)(?{${package}::comment(\$2)})>?";
 
     my $UntilRSBs = "[^\\]]*](?:[^\\]]+])*]+";
-    my $CDATA_CE = "$UntilRSBs(?:[^\\]>]$UntilRSBs)*>";
+    my $CDATA_CE = "($UntilRSBs(?:[^\\]>]$UntilRSBs)*)(?{${package}::cdata(\$3)})>";
 
     my $S = "[ \\n\\t\\r]+";
     my $NameStrt = "[A-Za-z_:]|[^\\x00-\\x7F]";
@@ -99,11 +98,11 @@ sub _regexp {
     my $DT_IdentSE = "$Name(?:$S(?:$Name|$QuoteSE))*";
     my $MarkupDeclCE = "(?:[^\\]\"'><]+|$QuoteSE)*>";
     my $S1 = "[\\n\\r\\t ]";
-    my $UntilQMs = "[^?]*\\?";
+    my $UntilQMs = "[^?]*\\?+";
 
-    my $PI_Tail = "\\?>|$S1$UntilQMs(?:[^>?]$UntilQMs)*";
+    my $PI_Tail = "\\?|$S1$UntilQMs(?:[^>?]$UntilQMs)*";
     my $DT_ItemSE = "<(?:!(?:--$Until2Hyphens>|[^-]$MarkupDeclCE)|\\?$Name(?:$PI_Tail>))|%$Name;|$S";
-    my $DocTypeCE = "$S($DT_IdentSE(?:$S)?(?:\\[(?:$DT_ItemSE)*](?:$S)?)?)>(?{${package}::_doctype(\$3)})";
+    my $DocTypeCE = "$S($DT_IdentSE(?:$S)?(?:\\[(?:$DT_ItemSE)*](?:$S)?)?)>(?{${package}::_doctype(\$4)})";
 
     my $DeclCE = "--(?:$CommentCE)?|\\[CDATA\\[(?:$CDATA_CE)?|DOCTYPE(?:$DocTypeCE)?";
 
@@ -208,7 +207,12 @@ sub comment {
 sub end {
      pop(@stack) eq $_[0] or die "mismatched tag '$_[0]'\n";
      End(__PACKAGE__, $_[0]);
- }
+}
+
+sub cdata {
+    die "CDATA outside of tag stack" unless @stack;
+    CData(__PACKAGE__, substr $_[0], 0, -2);
+}
 
 sub _doctype {
     Doctype(__PACKAGE__, $_[0]);

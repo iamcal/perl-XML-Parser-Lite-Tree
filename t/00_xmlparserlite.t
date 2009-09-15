@@ -1,4 +1,4 @@
-use Test::More tests => 43;
+use Test::More tests => 65;
 
 use XML::Parser::LiteCopy;
 use Data::Dumper;
@@ -49,7 +49,7 @@ is($foo{empty}, '');
 
 
 #
-# PCDATA
+# Char & CDATA
 #
 
 sub test_chars {
@@ -57,6 +57,7 @@ sub test_chars {
   my $p = new XML::Parser::LiteCopy
     Handlers => {
       Char => sub { push @chars, $_[1]; },
+      CData => sub { push @chars, 'CDATA:'.$_[1]; },
     }
   ;
   my $in = shift;
@@ -65,19 +66,20 @@ sub test_chars {
   is_deeply(\@chars, \@_);
 }
 
-
-# >>> An important note about entities:
-# PCDATA segments will fire Char events as-is.
-# CDATA segments will convert &<>" into their entities, leaving everything else as-is.
-# this means that the Char events will always have encoded data!
-
 &test_chars('<foo />', ());
 &test_chars('<foo></foo>', ());
 &test_chars('<foo>hey</foo>', ('hey'));
 &test_chars('<foo>hey&lt;</foo>', ('hey&lt;'));
 &test_chars('<foo>&amp;hey</foo>', ('&amp;hey'));
 
-&test_chars('<foo><![CDATA[ yo ]]></foo>', (' yo '));
+&test_chars('<foo><![CDATA[yo]]></foo>', ('CDATA:yo'));
+&test_chars('<foo><![CDATA[ yo ]]></foo>', ('CDATA: yo '));
+&test_chars('<foo><![CDATA[foo]bar]]></foo>', ('CDATA:foo]bar'));
+&test_chars('<foo><![CDATA[foo]]bar]]></foo>', ('CDATA:foo]]bar'));
+&test_chars('<foo><![CDATA[foo]>bar]]></foo>', ('CDATA:foo]>bar'));
+&test_chars('<foo><![CDATA[foo]]]></foo>', ('CDATA:foo]'));
+
+&test_chars('<foo>woo<![CDATA[foo]]><![CDATA[bar]]>yay</foo>', ('woo','CDATA:foo','CDATA:bar','yay'));
 
 
 #
@@ -123,7 +125,7 @@ sub test_pi {
   my @instructions;
   my $p = new XML::Parser::LiteCopy
     Handlers => {
-      XMLDecl => sub { push @instructions, $_[1]; },
+      PI => sub { push @instructions, $_[1]; },
     }
   ;
   my $in = shift;
@@ -169,3 +171,8 @@ ok($@ =~ /^multiple roots, wrong element 'bar'/);
 eval { $p2->parse('  ') };
 ok($@ =~ /^no element found/);
 
+# TODO tests
+# check for unclosed PI: $p2->parse('<?pi<foo></foo>');
+# check for unclosed CDATA
+# check for bad doctype
+# check for bad comments (various kinds)
