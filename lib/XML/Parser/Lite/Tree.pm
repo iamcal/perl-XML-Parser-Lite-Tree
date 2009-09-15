@@ -27,7 +27,7 @@ sub new {
 			Char	=> sub { $self->_do_char(@_); },
 			End	=> sub { $self->_end_tag(@_); },
 			Comment	=> sub { $self->_do_comment(@_); },
-			XMLDecl	=> sub { $self->_do_xmldecl(@_); },
+			PI	=> sub { $self->_do_pi(@_); },
 			Doctype	=> sub { $self->_do_doctype(@_); },
 		};
 	$self->{process_ns} = $self->{opts}->{process_ns} || 0;
@@ -122,7 +122,7 @@ sub _do_comment {
 	1;
 }
 
-sub _do_xmldecl {
+sub _do_pi {
 	my $self = shift;
 	shift;
 
