@@ -41,7 +41,7 @@ sub setHandlers {
     no strict 'refs'; local $^W;
     # clear all handlers if called without parameters
     if (not @_) {
-        for (qw(Start End Char Final Init Comment Doctype XMLDecl)) {
+        for (qw(Start End Char Final Init Comment Doctype PI)) {
             *$_ = sub {}
         }
     }
@@ -107,7 +107,7 @@ sub _regexp {
 
     my $DeclCE = "--(?:$CommentCE)?|\\[CDATA\\[(?:$CDATA_CE)?|DOCTYPE(?:$DocTypeCE)?";
 
-    my $PI_CE = "($Name(?:$PI_Tail))>(?{${package}::_xmldecl(\$5)})";
+    my $PI_CE = "($Name(?:$PI_Tail))>(?{${package}::_pi(\$5)})";
 
     # these expressions were modified for backtracking and events
 
@@ -214,8 +214,8 @@ sub _doctype {
     Doctype(__PACKAGE__, $_[0]);
 }
 
-sub _xmldecl {
-    XMLDecl(__PACKAGE__, substr $_[0], 0, -1);
+sub _pi {
+    PI(__PACKAGE__, substr $_[0], 0, -1);
 }
 
 
@@ -334,9 +334,9 @@ Called at the end of each XML node. See L<XML::Parser> for details
 
 See L<XML::Parser> for details
 
-=head2 XMLDecl
+=head2 PI
 
-See L<XML::Parser> for details
+See XMLDecl in L<XML::Parser> for details, but also includes other processing instructions
 
 =head2 Doctype
 
@@ -370,6 +370,8 @@ Paul Kulchenko (paulclinger@yahoo.com)
 Martin Kutter (martin.kutter@fen-net.de)
 
 Additional handlers supplied by Adam Leggett.
+
+Further modifications by Cal Henderson.
 
 =cut
 
