@@ -1,4 +1,4 @@
-use Test::More tests => 67;
+use Test::More tests => 81;
 
 use XML::Parser::LiteCopy;
 use Data::Dumper;
@@ -37,6 +37,7 @@ my $p2 = new XML::Parser::LiteCopy
     End => sub { $e++; },
   }
 ;
+
 $p2->parse('<foo id="me" root="0" empty="">Hello <bar>cruel</bar> <foobar/> World!</foo>');
 is($s, 3);
 is($c, 4);
@@ -145,31 +146,36 @@ sub test_pi {
 # error conditions
 #
 
-$p2->setHandlers;
+sub test_error {
+  my @errors;
+  my $p = new XML::Parser::LiteCopy
+    Handlers => {
+      Error => sub { push @errors, $_[1]; },
+    },
+    ReturnErrors => 1
+  ;
+  my $in = shift;
+  $p->parse($in);
 
-# check for junk before
-eval { $p2->parse('foo<foo id="me">Hello World!</foo>') };
-ok($@ =~ /^junk .+ before/);
+  # first test method gets a list of errors from the Error() event handler
+  is(scalar @errors, scalar @_);
+  for my $i(0..scalar @_-1){
+    like($errors[$i], $_[$i]);
+  }
 
-# check for junk after
-eval { $p2->parse('<foo id="me">Hello World!</foo>bar') };
-ok($@ =~ /^junk .+ after/);
+  # and then we check it dies correctly
+  my $p2 = new XML::Parser::LiteCopy;
+  eval { $p2->parse($in); };
 
-# check for non-closed tag
-eval { $p2->parse('<foo id="me">Hello World!') };
-ok($@ =~ /^not properly closed tag 'foo'/);
+  like($@, $_[0]);
+}
 
-# check for non properly closed tag
-eval { $p2->parse('<foo id="me">Hello World!<bar></foo></bar>') };
-ok($@ =~ /^mismatched tag 'foo'/);
-
-# check for unwanted tag
-eval { $p2->parse('<foo id="me">Hello World!</foo><bar></bar>') };
-ok($@ =~ /^multiple roots, wrong element 'bar'/);
-
-# check for string without elements
-eval { $p2->parse('  ') };
-ok($@ =~ /^no element found/);
+&test_error('foo<foo id="me">Hello World!</foo>', qr/^junk .+ before/);
+&test_error('<foo id="me">Hello World!</foo>bar', qr/^junk .+ after/);
+&test_error('<foo id="me">Hello World!', qr/^not properly closed tag 'foo'/);
+&test_error('<foo id="me">Hello World!<bar></foo></bar>', qr/^mismatched tag 'foo'/, qr/^mismatched tag 'bar'/);
+&test_error('<foo id="me">Hello World!</foo><bar></bar>', qr/^multiple roots, wrong element 'bar'/, qr/^unexpected closing tag 'bar'/);
+&test_error('  ', qr/^no element found/);
 
 # TODO tests
 # check for unclosed PI: $p2->parse('<?pi<foo></foo>');

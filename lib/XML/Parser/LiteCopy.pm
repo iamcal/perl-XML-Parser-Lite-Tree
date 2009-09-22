@@ -18,6 +18,8 @@ use strict;
 use vars qw($VERSION);
 $VERSION = '0.720.00';
 
+my $ReturnErrors = 0;
+
 sub new {
     my $class = shift;
 
@@ -27,6 +29,8 @@ sub new {
     my %parameters = @_;
     $self->setHandlers(); # clear first
     $self->setHandlers(%{$parameters{Handlers} || {}});
+
+    $ReturnErrors = $parameters{ReturnErrors} || 0;
 
     return $self;
 }
@@ -38,7 +42,7 @@ sub setHandlers {
     no strict 'refs'; local $^W;
     # clear all handlers if called without parameters
     if (not @_) {
-        for (qw(Start End Char Final Init CData Comment Doctype PI)) {
+        for (qw(Start End Char Final Init CData Comment Doctype PI Error)) {
             *$_ = sub {}
         }
     }
@@ -165,13 +169,13 @@ sub _init {
 }
 
 sub _final {
-    die "not properly closed tag '$stack[-1]'\n" if @stack;
-    die "no element found\n" unless $level;
+    return _error("not properly closed tag '$stack[-1]'") if @stack;
+    return _error("no element found") unless $level;
     Final(__PACKAGE__, @_)
 }
 
 sub _start {
-    die "multiple roots, wrong element '$_[0]'\n" if $level++ && !@stack;
+    return _error("multiple roots, wrong element '$_[0]'") if $level++ && !@stack;
     push(@stack, $_[0]);
     Start(__PACKAGE__, @_);
 }
@@ -184,13 +188,14 @@ sub _char {
     # will iterate with loop, but we'll do it no more than two times, so
     # it shouldn't affect performance
     for (my $i=0; $i < length $_[0]; $i++) {
-        die "junk '$_[0]' @{[$level ? 'after' : 'before']} XML element\n"
+        return _error("junk '$_[0]' @{[$level ? 'after' : 'before']} XML element")
         if index("\n\r\t ", substr($_[0],$i,1)) < 0; # or should '< $[' be there
     }
 }
 
 sub _end {
-    pop(@stack) eq $_[0] or die "mismatched tag '$_[0]'\n";
+    return _error("unexpected closing tag '$_[0]'") if !@stack;
+    pop(@stack) eq $_[0] or return _error("mismatched tag '$_[0]'");
     End(__PACKAGE__, $_[0]);
 }
 
@@ -199,12 +204,12 @@ sub comment {
 }
 
 sub end {
-     pop(@stack) eq $_[0] or die "mismatched tag '$_[0]'\n";
+     pop(@stack) eq $_[0] or return _error("mismatched tag '$_[0]'");
      End(__PACKAGE__, $_[0]);
 }
 
 sub cdata {
-    die "CDATA outside of tag stack" unless @stack;
+    return _error("CDATA outside of tag stack") unless @stack;
     CData(__PACKAGE__, substr $_[0], 0, -2);
 }
 
@@ -214,6 +219,14 @@ sub _doctype {
 
 sub _pi {
     PI(__PACKAGE__, substr $_[0], 0, -1);
+}
+
+sub _error {
+    if ($ReturnErrors){
+      Error(__PACKAGE__, $_[0]);
+      return;
+    }
+    die "$_[0]\n";
 }
 
 # ======================================================================
