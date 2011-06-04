@@ -5,7 +5,7 @@ use strict;
 use warnings;
 use XML::Parser::LiteCopy;
 
-our $VERSION = '0.12';
+our $VERSION = '0.14';
 
 use vars qw( $parser );
 
