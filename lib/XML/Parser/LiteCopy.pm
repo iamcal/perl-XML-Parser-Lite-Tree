@@ -6,7 +6,7 @@
 #
 # Copyright (C) 2000-2007 Paul Kulchenko (paulclinger@yahoo.com)
 # Copyright (C) 2008 Martin Kutter (martin.kutter@fen-net.de)
-# Copyright (C) 2009 Cal Henderson (cal@iamcal.com)
+# Copyright (C) 2009-2011 Cal Henderson (cal@iamcal.com)
 #
 # SOAP::Lite is free software; you can redistribute it
 # and/or modify it under the same terms as Perl itself.
@@ -104,17 +104,17 @@ sub _regexp {
 
     my $DeclCE = "--(?:$CommentCE)?|\\[CDATA\\[(?:$CDATA_CE)?|DOCTYPE(?:$DocTypeCE)?";
 
-    my $PI_CE = "($Name(?:$PI_Tail))>(?{${package}::_pi(\$5)})";
+    my $PI_CE = "($Name(?:$PI_Tail))>(?{${package}::_pi(\$5); undef})";
 
     # these expressions were modified for backtracking and events
 
-    my $EndTagCE = "($Name)(?{${package}::_end(\$6)})(?:$S)?>";
+    my $EndTagCE = "($Name)(?{${package}::_end(\$6); undef})(?:$S)?>";
     my $AttValSE = "\"([^<\"]*)\"|'([^<']*)'";
 
     my $ElemTagCE = "($Name)"
         . "(?:$S($Name)(?:$S)?=(?:$S)?(?:$AttValSE)"
         . "(?{[\@{\$^R||[]},\$8=>defined\$9?\$9:\$10]}))*(?:$S)?(/)?>"
-        . "(?{${package}::_start(\$7,\@{\$^R||[]}),\$^R=[]})(?{\$11 and ${package}::_end(\$7)})";
+        . "(?{${package}::_start(\$7,\@{\$^R||[]}),\$^R=[]})(?{\$11 and ${package}::_end(\$7); undef})";
 
     my $MarkupSPE = "<(?:!(?:$DeclCE)?|\\?(?:$PI_CE)?|/(?:$EndTagCE)?|(?:$ElemTagCE)?)";
 
