@@ -11,5 +11,6 @@ WriteMakefile(
     },
 	'PREREQ_PM'	=> {
 		'Test::More'		=> 0,
+		'Test::Deep'        => 0.11,
 	},
 );
