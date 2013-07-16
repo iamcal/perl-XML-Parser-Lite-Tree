@@ -7,7 +7,7 @@ use XML::Parser::Lite::Tree;
 # test comment nodes
 #
 
-my $parser = new XML::Parser::Lite::Tree(skip_white => 1);
+my $parser = XML::Parser::Lite::Tree->new(skip_white => 1);
 my $tree = $parser->parse(q~
 	<foo>
 		<woo />

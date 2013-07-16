@@ -7,7 +7,7 @@ use XML::Parser::Lite::Tree;
 # test the whitespace folding
 #
 
-my $parser = new XML::Parser::Lite::Tree(skip_white => 1);
+my $parser = XML::Parser::Lite::Tree->new(skip_white => 1);
 my $tree = $parser->parse("<foo>  <bar> <baz>woo</baz></bar>  </foo>");
 
 is(scalar @{&get_node($tree, ''     )->{children}}, 1, "one child of the root node");
@@ -44,7 +44,7 @@ my $xml = q~
 	</aaa>
 ~;
 
-$parser = new XML::Parser::Lite::Tree(process_ns => 1, skip_white => 1);
+$parser = XML::Parser::Lite::Tree->new(process_ns => 1, skip_white => 1);
 $tree = $parser->parse($xml);
 
 is(&get_node($tree, '0'    )->{ns}, 'urn:default');

@@ -30,12 +30,12 @@ is($e, 1);
 
 ($s, $c, $e) = (0) x 3;
 my %foo;
-my $p2 = new XML::Parser::LiteCopy
+my $p2 = XML::Parser::LiteCopy->new(
   Handlers => {
     Start => sub { shift; $s++; %foo = @_[1..$#_] if $_[0] eq 'foo'; },
     Char => sub { $c++; },
     End => sub { $e++; },
-  }
+  })
 ;
 
 $p2->parse('<foo id="me" root="0" empty="">Hello <bar>cruel</bar> <foobar/> World!</foo>');
@@ -55,12 +55,12 @@ is($foo{empty}, '');
 
 sub test_chars {
   my @chars;
-  my $p = new XML::Parser::LiteCopy
+  my $p = XML::Parser::LiteCopy->new(
     Handlers => {
       Char => sub { push @chars, $_[1]; },
       CData => sub { push @chars, 'CDATA:'.$_[1]; },
     }
-  ;
+  );
   my $in = shift;
   $p->parse($in);
   is(scalar @chars, scalar @_);
@@ -89,11 +89,11 @@ sub test_chars {
 
 sub test_comments {
   my @comments;
-  my $p = new XML::Parser::LiteCopy
+  my $p = XML::Parser::LiteCopy->new(
     Handlers => {
       Comment => sub { push @comments, $_[1]; },
     }
-  ;
+  );
   my $in = shift;
   $p->parse($in);
   is(scalar @comments, scalar @_);
@@ -124,11 +124,11 @@ sub test_comments {
 
 sub test_pi {
   my @instructions;
-  my $p = new XML::Parser::LiteCopy
+  my $p = XML::Parser::LiteCopy->new(
     Handlers => {
       PI => sub { push @instructions, $_[1]; },
     }
-  ;
+  );
   my $in = shift;
   $p->parse($in);
   is(scalar @instructions, scalar @_);
@@ -148,12 +148,12 @@ sub test_pi {
 
 sub test_error {
   my @errors;
-  my $p = new XML::Parser::LiteCopy
+  my $p = XML::Parser::LiteCopy->new(
     Handlers => {
       Error => sub { push @errors, $_[1]; },
     },
     ReturnErrors => 1
-  ;
+  );
   my $in = shift;
   $p->parse($in);
 
@@ -164,7 +164,7 @@ sub test_error {
   }
 
   # and then we check it dies correctly
-  my $p2 = new XML::Parser::LiteCopy;
+  my $p2 = XML::Parser::LiteCopy->new;
   eval { $p2->parse($in); };
 
   like($@, $_[0]);
