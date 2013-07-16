@@ -242,7 +242,7 @@ XML::Parser::LiteCopy - Lightweight regexp-based XML parser
 
   use XML::Parser::LiteCopy;
 
-  $p1 = new XML::Parser::LiteCopy;
+  $p1 = XML::Parser::LiteCopy->new;
   $p1->setHandlers(
     Start => sub { shift; print "start: @_\n" },
     Char => sub { shift; print "char: @_\n" },
@@ -250,13 +250,13 @@ XML::Parser::LiteCopy - Lightweight regexp-based XML parser
   );
   $p1->parse('<foo id="me">Hello World!</foo>');
 
-  $p2 = new XML::Parser::LiteCopy
+  $p2 = XML::Parser::LiteCopy->new(
     Handlers => {
       Start => sub { shift; print "start: @_\n" },
       Char => sub { shift; print "char: @_\n" },
       End => sub { shift; print "end: @_\n" },
     }
-  ;
+  );
   $p2->parse('<foo id="me">Hello <bar>cruel</bar> World!</foo>');
 
 =head1 DESCRIPTION

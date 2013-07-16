@@ -7,7 +7,7 @@ use XML::Parser::Lite::Tree;
 # test processing instructions
 #
 
-my $parser = new XML::Parser::Lite::Tree(skip_white => 1);
+my $parser = XML::Parser::Lite::Tree->new(skip_white => 1);
 my $tree = $parser->parse(q~
 	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 		"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">

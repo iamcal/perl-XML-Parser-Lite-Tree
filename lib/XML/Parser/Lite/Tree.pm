@@ -21,7 +21,7 @@ sub new {
 	my %opts = (ref $_[0]) ? ((ref $_[0] eq 'HASH') ? %{$_[0]} : () ) : @_;
 	$self->{opts} = \%opts;
 
-	$self->{__parser} = new XML::Parser::LiteCopy
+	$self->{__parser} = XML::Parser::LiteCopy->new(
 		Handlers => {
 			Start	=> sub { $self->_start_tag(@_); },
 			Char	=> sub { $self->_do_char(@_); },
@@ -30,7 +30,7 @@ sub new {
 			Comment	=> sub { $self->_do_comment(@_); },
 			PI	=> sub { $self->_do_pi(@_); },
 			Doctype	=> sub { $self->_do_doctype(@_); },
-		};
+		});
 	$self->{process_ns} = $self->{opts}->{process_ns} || 0;
 	$self->{skip_white} = $self->{opts}->{skip_white} || 0;
 
