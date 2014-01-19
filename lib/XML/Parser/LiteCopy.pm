@@ -1,6 +1,6 @@
 # NOTE: This module originally came from SOAP::Lite, which you probably
 # don't have. It was first repackaged here just to avoid the huge 
-# dependancy tree, but this version has several features (CDATA
+# dependency tree, but this version has several features (CDATA
 # support, better PI and Comment support) that have been added.
 
 #
@@ -263,7 +263,7 @@ XML::Parser::LiteCopy - Lightweight regexp-based XML parser
 
 This Perl implements an XML parser with a interface similar to
 XML::Parser. Though not all callbacks are supported, you should be able to
-use it in the same way you use XML::Parser. Due to using experimantal regexp
+use it in the same way you use XML::Parser. Due to using experimental regexp
 features it'll work only on Perl 5.6 and above and may behave differently on
 different platforms.
 
@@ -278,7 +278,7 @@ not re-entrant).
 Constructor.
 
 As (almost) all SOAP::Lite constructors, new() returns the object called on
-when called as object method. This means that the following effectifely is
+when called as object method. This means that the following effectively is
 a no-op if $obj is a object:
 
  $obj = $obj->new();
@@ -357,7 +357,7 @@ See L<XML::Parser> for details
 
 =head2 Final
 
-Called at the end of the parsing process. You should perform any neccessary
+Called at the end of the parsing process. You should perform any necessary
 cleanup here.
 
 =head1 SEE ALSO
